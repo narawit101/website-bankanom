@@ -25,7 +25,7 @@ function Station_2() {
         const total = item.import_quantity;
         const sumExport = Number(item.export_quantity) + Number(item.lost_quantity);
         const left = total - sumExport;
-        const maxTray = Math.floor(left / trayPerUnit); 
+        const maxTray = Math.floor(left / trayPerUnit);
 
         if (!tray) {
             alert("กรุณากรอกจำนวนถาดที่จะส่ง");
@@ -156,12 +156,12 @@ function Station_2() {
 
             </div>
             {openModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+                <div className="fixed inset-0 bg-opacity-40 flex justify-center items-center">
                     <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-black">
 
                         <h2 className="text-xl font-bold mb-4 text-red-600">แจ้งปัญหา</h2>
 
-                        <label className="text-sm">หัวข้อปัญหา</label>
+                        <label className="flex text-sm mt-4 mb-4">หัวข้อปัญหา</label>
                         <select
                             value={problemTitle}
                             onChange={(e) => setProblemTitle(e.target.value)}
@@ -173,7 +173,7 @@ function Station_2() {
                             <option value="ไหม้">ไหม้</option>
                         </select>
 
-                        <label className="text-sm">จำนวนชิ้นที่มีปัญหา</label>
+                        <label className="flex text-sm mt-4 mb-4">จำนวนชิ้นที่มีปัญหา</label>
                         <input
                             type="number"
                             min={0}
@@ -182,7 +182,7 @@ function Station_2() {
                             className="border p-2 rounded w-full mb-4"
                         />
 
-                        <div className="flex justify-between">
+                        <div className="flex justify-between mt-4">
                             <button
                                 className="bg-red-500 text-white px-4 py-2 rounded"
                                 onClick={handleSubmitProblem}
