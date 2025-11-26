@@ -1,21 +1,41 @@
-import React from 'react'
-import Logo from '../assets/esarndotcom.jpg'
+import { useMemo, useState } from 'react'
+import Station1 from './Station_1'
+import Station2 from './Station_2'
+import Station3 from './Station_3'
 
-function navbar() {
+const tabConfig = [
+  { id: 'station1', label: 'Station 1', component: Station1 },
+  { id: 'station2', label: 'Station 2', component: Station2 },
+  { id: 'station3', label: 'Station 3', component: Station3 }
+]
+
+function Navbar() {
+  const [activeTab, setActiveTab] = useState(tabConfig[0].id)
+  const ActiveComponent = useMemo(() => {
+    return tabConfig.find((tab) => tab.id === activeTab)?.component ?? (() => null)
+  }, [activeTab])
+
   return (
-    <nav className='bg-[##FFFFFF]'>
-      <div className='container mx-auto h-[100px] flex flex-col justify-between  items-center md:flex-row md:px-35'>
-        <a href="#">  <img src={Logo} alt="" /></a>
-        <ul className='flex flex-row'>
-          <li className='m-4'><a href="#">หน้าหลัก</a> </li>
-          <li className='m-4'><a href="#">บริการของเรา</a></li>
-          <li className='m-4'><a href="#">เกี่ยวกับเรา</a></li>
-          <li className='m-4'><a href="#">ติดต่อเรา</a></li>
-        </ul>
+    <div className="flex flex-col gap-4 p-4 ">
+      <div role="tablist" className="tabs tabs-boxed w-fit">
+        {tabConfig.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            role="tab"
+            className={`tab text-black ${tab.id === activeTab ? 'tab-active !font-bold' : ''}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
 
-    </nav>
+      <div className="rounded-box border border-base-200 bg-base-100 p-6 bg-white shadow-md shadow-gray-300 border border-gray-300">
+        <ActiveComponent />
+      </div>
+    </div>
   )
 }
 
-export default navbar
+export default Navbar
