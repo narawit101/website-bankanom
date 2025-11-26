@@ -9,78 +9,101 @@ function Station_2() {
     console.log('Production Data:', production);
     const allProducts: any = product;
     const allProduction: any = production;
-    const [products, setProducts] = useState([])
-    const [productions, setProductions] = useState([])
 
-    useEffect(() => {
-        fetachProducts(products);
-        fetachProduction(productions);
-        // console.log('Products:', products);
-        // console.log('Production:', productions);
-    }, [products, productions]);
-
-    const fetachProducts = async (data: any) => {
-        try {
-            if (data) {
-                setProducts(data);
-                console.log('Fetched Products:', data);
-            }
-        } catch (error) {
-            console.log('Error fetching products:', error);
-        }
-    }
-    const fetachProduction = async (data: any) => {
-        try {
-            if (data) {
-                setProductions(data);
-            }
-        } catch (error) {
-            console.log('Error fetching production:', error);
-        }
-    }
-
-    console.log('Rendered Products:', allProducts);
-    console.log('Rendered Products:', allProduction);
     const station2 = allProduction.data.filter(
         (item: any) => item.station === 2
     )
+
+    const [openModal, setOpenModal] = useState(false);
+    const [problemProduct, setProblemProduct] = useState<any>(null);
+    const [trayInput, setTrayInput] = useState<{ [key: number]: number }>({});
+    const [problemQty, setProblemQty] = useState<number>(0);
+    const [problemTitle, setProblemTitle] = useState<string>("");
+
+    const handleSendProduct = (item: any, tray: number, trayPerUnit: number) => {
+        const matchProduct = allProducts.products.find((prod: any) => prod.id === item.product_id);
+        const total = item.import_quantity;
+        const sumExport = Number(item.export_quantity) + Number(item.lost_quantity);
+        const left = total - sumExport;
+        const maxTray = Math.floor(left / trayPerUnit); 
+
+        if (!tray) {
+            alert("กรุณากรอกจำนวนถาดที่จะส่ง");
+            return;
+        }
+        if (tray > maxTray || tray < 0) {
+            alert("จำนวนไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
+            return;
+        }
+
+        const sendQty = tray * trayPerUnit;
+
+        alert(`
+ส่งสินค้าเรียบร้อย
+สินค้า: ${matchProduct.name}
+เวลาส่ง: ${item.shipping_time}
+โรงงาน: ${item.factory_id}
+จำนวนถาดที่ส่ง: ${tray}
+จำนวนชิ้นที่ส่ง: ${sendQty}
+สถานี: ${item.station}
+เวลาที่ส่ง: ${new Date().toLocaleString()}
+        `);
+    };
+
+    const handleOpenProblem = (item: any) => {
+        setProblemProduct(item);
+        setOpenModal(true);
+    };
+
+    const handleSubmitProblem = () => {
+        if (!problemTitle) {
+            alert("กรุณาเลือกหัวข้อปัญหา");
+            return;
+        }
+        if (!problemQty || problemQty <= 0) {
+            alert("กรุณากรอกจำนวนชิ้นที่มีปัญหา");
+            return;
+        }
+
+        const matchProduct = allProducts.products.find((prod: any) => prod.id === problemProduct.product_id);
+
+        alert(`
+สินค้า: ${matchProduct.name}
+เวลาส่ง: ${problemProduct.shipping_time}
+โรงงาน: ${problemProduct.factory_id}
+หัวข้อปัญหา: ${problemTitle}
+จำนวนชิ้นที่มีปัญหา: ${problemQty}
+สถานี: ${problemProduct.station}
+เวลาที่แจ้ง: ${new Date().toLocaleString()}
+        `);
+
+        setOpenModal(false);
+        setProblemQty(0);
+        setProblemTitle("");
+    };
     return (
 
         <div className='flex flex-row gap-4 justify-center w-full'>
-            {/* <div className='text-gray-700'>
-                {allProducts.products.length > 0 && (
-                    <div>
-                        {allProducts.products.map((item: any) => {
-                            // console.log('Product Item:', item);
-                            return (
-                                <div key={item.id} className="mb-4 p-4 border border-gray-300 rounded-lg shadow-sm">
-                                    <h2 className="text-lg font-semibold mb-2">Product ID {item.id}</h2>
-                                    <p className="text-lg font-semibold mb-2">Product Name: {item.name}</p>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </div> */}
-            <div className='text-gray-700'>
+            <div className='text-gray-700 w-full'>
                 {station2.length > 0 &&
                     (
                         <div>
                             {station2.map((item: any) => {
                                 // console.log('Product Item:', item);
                                 const matchProduct = allProducts.products.find((prod: any) => prod.id === item.product_id);
+                                const trayPerUnit = matchProduct?.piece_per_tray || 1;
                                 // console.log('Matched Product for Production ID', item.ID, ':', matchProduct);
                                 const tray = matchProduct ? matchProduct.piece_per_tray : 0;
                                 console.log('Tray for Production ID', item.ID, ':', tray);
                                 const total = item.import_quantity;
                                 const sumExport = Number(item.export_quantity) + Number(item.lost_quantity);
                                 const left = total - sumExport;
-                                const calTray = left / tray
-                                const allTray = total / tray
+                                const leftTray = Math.floor(left / trayPerUnit);
+                                const allTray = Math.floor(total / trayPerUnit);
                                 const nameProduct = matchProduct ? matchProduct.name : 'Unknown';
 
                                 return (
-                                    <div key={item.id} className="mb-4 p-4 border border-gray-300 rounded-lg shadow-sm">
+                                    <div key={item.id} className="mb-4 p-4 border border-gray-300 rounded-lg shadow-sm ">
                                         <h2 className="text-lg font-semibold mb-2">Productions ID: {item.ID}</h2>
 
                                         <p>ชื่อสินค้า {nameProduct}</p>
@@ -92,21 +115,34 @@ function Station_2() {
                                         <p>จำนวนที่เหลือ {left}</p>
                                         <p>จำนวนออกรวม {sumExport}</p>
                                         <p>stations {item.station}</p>
-                                        <p>ถาดทั้งหมด {allTray}</p>
-                                        <p>ถาดที่เหลือ {calTray}</p>
+                                        <p>ถาดทั้งหมด: {allTray}</p>
+                                        <p>ถาดที่เหลือ: {leftTray}</p>
                                         <div className="flex flex-col items-end gap-3">
                                             <input
                                                 type="number"
-                                                min={1}
+                                                min={0}
+                                                value={trayInput[item.ID] || ""}
+                                                onChange={(e) =>
+                                                    setTrayInput({ ...trayInput, [item.ID]: Number(e.target.value) })
+                                                }
                                                 className="border p-2 rounded-md w-32"
                                                 placeholder="จำนวนถาด"
                                             />
 
-                                            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-32">
+
+                                            <button
+                                                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md w-32"
+                                                onClick={() =>
+                                                    handleSendProduct(item, trayInput[item.ID], trayPerUnit)
+                                                }
+                                            >
                                                 ส่งสินค้า
                                             </button>
 
-                                            <button className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md w-32">
+                                            <button
+                                                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md w-32"
+                                                onClick={() => handleOpenProblem(item)}
+                                            >
                                                 แจ้งปัญหา
                                             </button>
                                         </div>
@@ -119,7 +155,51 @@ function Station_2() {
                     )}
 
             </div>
+            {openModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-96 text-black">
 
+                        <h2 className="text-xl font-bold mb-4 text-red-600">แจ้งปัญหา</h2>
+
+                        <label className="text-sm">หัวข้อปัญหา</label>
+                        <select
+                            value={problemTitle}
+                            onChange={(e) => setProblemTitle(e.target.value)}
+                            className="border w-full p-2 rounded mb-3"
+                        >
+                            <option value="">-- เลือกหัวข้อปัญหา --</option>
+                            <option value="วัตถุดิบหมด">วัตถุดิบหมด</option>
+                            <option value="เครื่องเสีย">เครื่องเสีย</option>
+                            <option value="ไหม้">ไหม้</option>
+                        </select>
+
+                        <label className="text-sm">จำนวนชิ้นที่มีปัญหา</label>
+                        <input
+                            type="number"
+                            min={0}
+                            value={problemQty}
+                            onChange={(e) => setProblemQty(Number(e.target.value))}
+                            className="border p-2 rounded w-full mb-4"
+                        />
+
+                        <div className="flex justify-between">
+                            <button
+                                className="bg-red-500 text-white px-4 py-2 rounded"
+                                onClick={handleSubmitProblem}
+                            >
+                                แจ้งปัญหา
+                            </button>
+
+                            <button
+                                className="bg-gray-400 text-white px-4 py-2 rounded"
+                                onClick={() => setOpenModal(false)}
+                            >
+                                ปิด
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }
