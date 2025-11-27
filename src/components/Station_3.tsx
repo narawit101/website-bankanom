@@ -20,6 +20,34 @@ function Station_3() {
   const [problemQty, setProblemQty] = useState<number>(0);
   const [problemTitle, setProblemTitle] = useState<string>("");
 
+  const [filterProduct, setFilterProduct] = useState<string>("");
+  const [filterFactory, setFilterFactory] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterDate, setFilterDate] = useState<string>("");
+  const [filterShipping, setFilterShipping] = useState<string>("");
+
+  const checkStatus = (item: any, status: string) => {
+    const total = item.import_quantity;
+    const used = Number(item.export_quantity) + Number(item.lost_quantity);
+    const left = total - used;
+
+    if (status === "finished") return left === 0;
+    if (status === "left") return left > 0;
+    if (status === "lost") return item.lost_quantity > 0;
+
+    return true;
+  };
+
+  const filteredStation = station3.filter((item: any) => {
+    return (
+      (filterProduct ? item.product_id == filterProduct : true) &&
+      (filterFactory ? item.factory_id == filterFactory : true) &&
+      (filterStatus ? checkStatus(item, filterStatus) : true) &&
+      (filterDate ? item.CreatedAt?.split("T")[0] === filterDate : true) &&
+      (filterShipping ? item.shipping_time === filterShipping : true)
+    );
+  });
+
   const handleSendProduct = (item: any, tray: number, trayPerUnit: number) => {
     const matchProduct = allProducts.products.find((prod: any) => prod.id === item.product_id);
     const total = item.import_quantity;
@@ -83,12 +111,67 @@ function Station_3() {
   };
   return (
 
-    <div className='flex flex-row gap-4 justify-center w-full'>
+    <div className='flex flex-col gap-4 justify-center w-full text-black'>
+      <div className="w-full bg-white p-4 rounded-lg shadow mb-6">
+
+        <h2 className="text-lg font-bold mb-4">ค้นหา / กรองข้อมูล</h2>
+
+        <div className="grid grid-cols-2 gap-4">
+
+          <select
+            className="border p-2 rounded"
+            value={filterProduct}
+            onChange={(e) => setFilterProduct(e.target.value)}
+          >
+            <option value="">สินค้า (ทั้งหมด)</option>
+            {allProducts.products.map((p: any) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+
+          <select
+            className="border p-2 rounded"
+            value={filterFactory}
+            onChange={(e) => setFilterFactory(e.target.value)}
+          >
+            <option value="">โรงงานทั้งหมด</option>
+            <option value="1">โรงงาน 1</option>
+            <option value="2">โรงงาน 2</option>
+          </select>
+
+          <select
+            className="border p-2 rounded"
+            value={filterStatus}
+            onChange={(e) => setFilterStatus(e.target.value)}
+          >
+            <option value="">สถานะทั้งหมด</option>
+            <option value="finished">ผลิตครบแล้ว</option>
+            <option value="left">มีของเหลือ</option>
+            <option value="lost">มีของเสีย</option>
+          </select>
+
+          <input
+            type="date"
+            className="border p-2 rounded"
+            value={filterDate}
+            onChange={(e) => setFilterDate(e.target.value)}
+          />
+
+          <input
+            type="time"
+            className="border p-2 rounded"
+            value={filterShipping}
+            onChange={(e) => setFilterShipping(e.target.value)}
+          />
+        </div>
+      </div>
       <div className='text-gray-700 w-full'>
         {station3.length > 0 &&
           (
             <div>
-              {station3.map((item: any) => {
+             {filteredStation.map((item: any) => {
                 // console.log('Product Item:', item);
                 const matchProduct = allProducts.products.find((prod: any) => prod.id === item.product_id);
                 const trayPerUnit = matchProduct?.piece_per_tray || 1;
